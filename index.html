@@ -1,972 +1,909 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🎤 Karaoke Night</title>
-  <style>
-    /* ===== RESET & BASE ===== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0d0d14;
-      --surface: #16162a;
-      --surface2: #1e1e38;
-      --accent: #7c3aed;
-      --accent2: #a855f7;
-      --accent3: #ec4899;
-      --text: #f1f0ff;
-      --muted: #8b87a8;
-      --border: #2e2b4a;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --radius: 12px;
-      --radius-sm: 8px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎤 Karaoke Night</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ===== LAYOUT ===== */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 480px;
-      margin: 0 auto;
-      position: relative;
-    }
+  :root {
+    --bg: #0f0f1a;
+    --bg2: #16162a;
+    --bg3: #1e1e35;
+    --bg4: #252540;
+    --pink: #ff2d78;
+    --pink-dim: rgba(255,45,120,0.15);
+    --cyan: #00d4ff;
+    --cyan-dim: rgba(0,212,255,0.15);
+    --purple: #b44bff;
+    --purple-dim: rgba(180,75,255,0.15);
+    --text: #f0f0ff;
+    --text-dim: #8888aa;
+    --border: rgba(255,255,255,0.08);
+    --card: #1a1a2e;
+    --nav-h: 64px;
+    --header-h: 60px;
+    --player-h: 0px;
+  }
 
-    /* ===== PLAYER ===== */
-    #player-section {
-      background: #000;
-      position: relative;
-      flex-shrink: 0;
-    }
-    #player-wrapper {
-      width: 100%;
-      padding-top: 56.25%;
-      position: relative;
-    }
-    #player-wrapper iframe,
-    #player-wrapper #yt-player {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    #player-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.7);
-      flex-direction: column;
+  html, body {
+    height: 100%;
+    font-family: 'Poppins', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  /* Header */
+  #header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: rgba(15,15,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  #header h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+  }
+
+  /* Player Bar */
+  #player-bar {
+    position: fixed;
+    top: var(--header-h);
+    left: 0; right: 0;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    z-index: 90;
+    display: none;
+    flex-direction: column;
+  }
+  #player-bar.active { display: flex; }
+  #player-title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  #player-title-bar .song-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cyan);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+  #player-title-bar .player-btns {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #player-iframe-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background: #000;
+  }
+  #player-iframe-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+  }
+
+  /* Main Content */
+  #main {
+    position: fixed;
+    left: 0; right: 0;
+    top: var(--header-h);
+    bottom: var(--nav-h);
+    overflow-y: auto;
+    padding: 16px;
+    transition: top 0.3s ease;
+  }
+
+  /* Tabs */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* Bottom Nav */
+  #nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: rgba(15,15,26,0.97);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-btn .icon { font-size: 1.3rem; }
+  .nav-btn.active { color: var(--pink); }
+  .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--pink), var(--purple));
+    border-radius: 0 0 4px 4px;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 6px; right: calc(50% - 18px);
+    background: var(--pink);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  /* Search */
+  .search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search-box input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--cyan); }
+  .search-box input::placeholder { color: var(--text-dim); }
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+  }
+  .btn-secondary {
+    background: var(--bg4);
+    color: var(--text);
+  }
+  .btn-cyan {
+    background: linear-gradient(135deg, var(--cyan), #0099cc);
+    color: #000;
+  }
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+  .btn-icon {
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .btn-danger {
+    background: rgba(255,60,60,0.15);
+    color: #ff6060;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+
+  .result-card {
+    display: flex;
+    gap: 0;
+    flex-direction: column;
+  }
+  .result-card .card-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: var(--bg3);
+  }
+  .result-card .card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .result-card:hover .card-media img { transform: scale(1.03); }
+  .result-card .card-media .play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.35);
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 3rem;
+    cursor: pointer;
+  }
+  .result-card:hover .play-overlay { opacity: 1; }
+  .result-card .card-info {
+    padding: 12px 14px;
+  }
+  .card-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-channel {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Queue / Library / History cards */
+  .song-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+  }
+  .song-card .thumb {
+    width: 72px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg3);
+  }
+  .song-card .song-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .song-card .song-info .s-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .song-card .song-info .s-channel {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+  .song-card .song-info .s-meta {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .song-card .song-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .position-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--pink-dim);
+    color: var(--pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-dim);
+  }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.5; }
+  .empty-state strong { color: var(--text); }
+
+  /* Spinner */
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--pink);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 32px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  #toast-container {
+    position: fixed;
+    bottom: calc(var(--nav-h) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg4);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+    white-space: nowrap;
+  }
+  .toast.success { border-color: var(--cyan); color: var(--cyan); }
+  .toast.error { border-color: var(--pink); color: var(--pink); }
+  @keyframes toastIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes toastOut { to { opacity:0; transform: translateY(-8px); } }
+
+  /* Now playing mini */
+  .now-playing-strip {
+    background: linear-gradient(135deg, var(--pink-dim), var(--purple-dim));
+    border: 1px solid rgba(255,45,120,0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .now-playing-strip .pulse {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--pink);
+    animation: pulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity:1; }
+    50% { transform: scale(1.4); opacity:0.6; }
+  }
+  .now-playing-strip .np-text {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--pink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  /* Glow effect on play */
+  .glow-pink { box-shadow: 0 0 20px rgba(255,45,120,0.4); }
+  .glow-cyan { box-shadow: 0 0 20px rgba(0,212,255,0.3); }
+
+  /* Grid for search results on larger screens */
+  @media (min-width: 600px) {
+    #results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      z-index: 5;
     }
-    #player-overlay.hidden { display: none; }
-    #overlay-title {
-      font-size: 18px;
-      font-weight: 700;
-      text-align: center;
-      padding: 0 20px;
-    }
-    #overlay-sub {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: center;
-    }
-    .play-big-btn {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: none;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-      color: #fff;
-      box-shadow: 0 0 20px rgba(124,58,237,0.6);
-      transition: transform 0.15s;
-    }
-    .play-big-btn:active { transform: scale(0.92); }
+    #results-grid .card { margin-bottom: 0; }
+  }
+  @media (min-width: 900px) {
+    #results-grid { grid-template-columns: 1fr 1fr 1fr; }
+    #main { max-width: 960px; margin: 0 auto; }
+  }
 
-    /* now-playing bar */
-    #now-playing-bar {
-      background: linear-gradient(90deg, var(--surface2), var(--surface));
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-      min-height: 52px;
-      flex-shrink: 0;
-    }
-    #np-thumb {
-      width: 38px; height: 38px;
-      border-radius: 6px;
-      object-fit: cover;
-      flex-shrink: 0;
-      background: var(--surface2);
-    }
-    #np-info { flex: 1; min-width: 0; }
-    #np-title {
-      font-size: 13px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    #np-channel { font-size: 11px; color: var(--muted); }
-    #np-status {
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 20px;
-      background: var(--accent);
-      color: #fff;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    #skip-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.15s, color 0.15s;
-    }
-    #skip-btn:hover { background: var(--surface2); color: var(--text); }
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0 12px 0;
+  }
 
-    /* ===== TABS ===== */
-    #tabs {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px 4px;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      transition: color 0.15s;
-      border-bottom: 2px solid transparent;
-    }
-    .tab-btn .tab-icon { font-size: 18px; }
-    .tab-btn.active {
-      color: var(--accent2);
-      border-bottom-color: var(--accent2);
-    }
-    .tab-badge {
-      background: var(--accent3);
-      color: #fff;
-      border-radius: 10px;
-      font-size: 9px;
-      padding: 1px 5px;
-      min-width: 16px;
-      text-align: center;
-    }
-
-    /* ===== PANELS ===== */
-    #panels {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .panel {
-      position: absolute;
-      inset: 0;
-      overflow-y: auto;
-      padding: 14px;
-      display: none;
-    }
-    .panel.active { display: block; }
-
-    /* ===== SEARCH ===== */
-    #search-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    #search-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    #search-input:focus { border-color: var(--accent); }
-    #search-input::placeholder { color: var(--muted); }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .btn-primary:active { transform: scale(0.96); }
-    .btn-primary:hover { background: var(--accent2); }
-    .btn-primary:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
-
-    /* url-add */
-    #url-add-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    #url-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 13px;
-      outline: none;
-    }
-    #url-input::placeholder { color: var(--muted); }
-    #url-input:focus { border-color: var(--accent); }
-
-    /* song cards */
-    .song-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      transition: border-color 0.15s;
-    }
-    .song-card:hover { border-color: var(--accent); }
-    .song-card img {
-      width: 72px; height: 54px;
-      border-radius: 6px;
-      object-fit: cover;
-      flex-shrink: 0;
-      background: var(--surface2);
-    }
-    .song-card-info { flex: 1; min-width: 0; }
-    .song-card-title {
-      font-size: 13px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 2px;
-    }
-    .song-card-channel { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-    .song-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .btn-sm {
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .btn-sm:hover { background: var(--surface2); border-color: var(--accent); }
-    .btn-sm.danger:hover { background: rgba(239,68,68,0.15); border-color: var(--danger); color: var(--danger); }
-    .btn-sm.success { border-color: var(--success); color: var(--success); }
-    .btn-sm.accent { border-color: var(--accent2); color: var(--accent2); }
-
-    /* loading / empty */
-    .loading-spinner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: var(--muted);
-      flex-direction: column;
-      gap: 12px;
-    }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; line-height: 1.5; }
-
-    /* queue items */
-    .queue-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .queue-num {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--muted);
-      width: 28px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .queue-item.now { border-color: var(--accent2); background: rgba(124,58,237,0.1); }
-    .queue-item.now .queue-num { color: var(--accent2); }
-    .queue-remove {
-      margin-left: auto;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 18px;
-      padding: 4px;
-      flex-shrink: 0;
-    }
-    .queue-remove:hover { color: var(--danger); }
-
-    /* section headers */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .section-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .section-sub {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* toast */
-    #toast {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 10px 20px;
-      font-size: 13px;
-      color: var(--text);
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s, transform 0.25s;
-      z-index: 9999;
-      box-shadow: var(--shadow);
-    }
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* history items */
-    .history-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-      opacity: 0.85;
-    }
-    .history-item img {
-      width: 56px; height: 42px;
-      border-radius: 6px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-    .history-time {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* search source badge */
-    #search-source-badge {
-      font-size: 11px;
-      color: var(--success);
-      margin-bottom: 8px;
-      display: none;
-      align-items: center;
-      gap: 5px;
-    }
-    #search-source-badge.show { display: flex; }
-
-    /* error badge */
-    .error-badge {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-size: 13px;
-      color: var(--danger);
-      margin-bottom: 12px;
-    }
-
-    /* scrollbar */
-    .panel::-webkit-scrollbar { width: 4px; }
-    .panel::-webkit-scrollbar-track { background: transparent; }
-    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  </style>
+  .queue-play-next {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 0;
+    width: 100%;
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 20px rgba(255,45,120,0.35);
+  }
+  .queue-play-next:active { transform: scale(0.98); }
+  .queue-play-next:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
 </head>
 <body>
-<div id="app">
 
-  <!-- PLAYER -->
-  <div id="player-section">
-    <div id="player-wrapper">
-      <div id="yt-player"></div>
-      <div id="player-overlay">
-        <div class="empty-icon">🎤</div>
-        <div id="overlay-title">Karaoke Night</div>
-        <div id="overlay-sub">Search a song and add it to the queue</div>
-      </div>
+<div id="header">
+  <h1>🎤 Karaoke Night</h1>
+</div>
+
+<div id="player-bar">
+  <div id="player-title-bar">
+    <div class="pulse" style="width:10px;height:10px;border-radius:50%;background:var(--pink);animation:pulse 1.2s ease-in-out infinite;flex-shrink:0;"></div>
+    <span class="song-name" id="player-song-name">Loading...</span>
+    <div class="player-btns">
+      <button class="btn btn-sm btn-cyan" onclick="markPlayed()">✅ Played</button>
+      <button class="btn btn-sm btn-secondary" onclick="closePlayer()">✕</button>
     </div>
   </div>
-
-  <!-- NOW PLAYING BAR -->
-  <div id="now-playing-bar">
-    <img id="np-thumb" src="" alt="" onerror="this.style.display='none'" />
-    <div id="np-info">
-      <div id="np-title">Nothing playing</div>
-      <div id="np-channel"></div>
-    </div>
-    <span id="np-status">Idle</span>
-    <button id="skip-btn" onclick="skipSong()">⏭ Skip</button>
-  </div>
-
-  <!-- TABS -->
-  <div id="tabs">
-    <button class="tab-btn active" onclick="showTab('search')" id="tab-search">
-      <span class="tab-icon">🔍</span>Search
-    </button>
-    <button class="tab-btn" onclick="showTab('queue')" id="tab-queue">
-      <span class="tab-icon">📋</span>Queue<span class="tab-badge" id="queue-badge" style="display:none">0</span>
-    </button>
-    <button class="tab-btn" onclick="showTab('library')" id="tab-library">
-      <span class="tab-icon">🎵</span>Library
-    </button>
-    <button class="tab-btn" onclick="showTab('history')" id="tab-history">
-      <span class="tab-icon">🕐</span>History
-    </button>
-  </div>
-
-  <!-- PANELS -->
-  <div id="panels">
-
-    <!-- SEARCH PANEL -->
-    <div class="panel active" id="panel-search">
-      <div id="search-bar">
-        <input type="text" id="search-input" placeholder="Search karaoke songs..." autocomplete="off"
-          onkeydown="if(event.key==='Enter')doSearch()" />
-        <button class="btn-primary" id="search-btn" onclick="doSearch()">Search</button>
-      </div>
-      <div id="search-source-badge">✅ YouTube Data API v3</div>
-      <div id="url-add-bar">
-        <input type="text" id="url-input" placeholder="Paste YouTube URL to add directly..." />
-        <button class="btn-primary" onclick="addByUrl()">Add</button>
-      </div>
-      <div id="search-results"></div>
-    </div>
-
-    <!-- QUEUE PANEL -->
-    <div class="panel" id="panel-queue">
-      <div class="section-header">
-        <span class="section-title">Up Next</span>
-        <button class="btn-sm danger" onclick="clearQueue()">Clear All</button>
-      </div>
-      <div id="queue-list"></div>
-    </div>
-
-    <!-- LIBRARY PANEL -->
-    <div class="panel" id="panel-library">
-      <div class="section-header">
-        <span class="section-title">My Library</span>
-        <span class="section-sub" id="library-count">0 songs</span>
-      </div>
-      <div id="library-list"></div>
-    </div>
-
-    <!-- HISTORY PANEL -->
-    <div class="panel" id="panel-history">
-      <div class="section-header">
-        <span class="section-title">Play History</span>
-        <button class="btn-sm danger" onclick="clearHistory()">Clear</button>
-      </div>
-      <div id="history-list"></div>
-    </div>
-
+  <div id="player-iframe-wrap">
+    <iframe id="yt-iframe" src="" allowfullscreen allow="autoplay"></iframe>
   </div>
 </div>
 
-<div id="toast"></div>
+<div id="main">
+  <!-- Search Tab -->
+  <div class="tab active" id="tab-search">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search for karaoke songs..." onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn btn-primary" onclick="doSearch()">🔍</button>
+    </div>
+    <div id="search-status"></div>
+    <div id="results-grid"></div>
+  </div>
+
+  <!-- Queue Tab -->
+  <div class="tab" id="tab-queue">
+    <div class="section-header">
+      <span class="section-title">Up Next 🎶</span>
+    </div>
+    <button class="queue-play-next" id="play-next-btn" onclick="playNext()">▶ Play Next Song</button>
+    <div id="queue-list"></div>
+  </div>
+
+  <!-- Library Tab -->
+  <div class="tab" id="tab-library">
+    <div class="section-header">
+      <span class="section-title">My Library 📚</span>
+      <button class="btn btn-sm btn-danger" onclick="clearLibrary()" style="font-size:0.7rem;">Clear All</button>
+    </div>
+    <div id="library-list"></div>
+  </div>
+
+  <!-- History Tab -->
+  <div class="tab" id="tab-history">
+    <div class="section-header">
+      <span class="section-title">History 🕐</span>
+      <button class="btn btn-sm btn-danger" onclick="clearHistory()" style="font-size:0.7rem;">Clear</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<nav id="nav">
+  <button class="nav-btn active" id="nav-search" onclick="switchTab('search')">
+    <span class="icon">🔍</span>
+    <span>Search</span>
+  </button>
+  <button class="nav-btn" id="nav-queue" onclick="switchTab('queue')">
+    <span class="icon">🎶</span>
+    <span>Queue</span>
+    <span class="nav-badge" id="queue-badge" style="display:none;">0</span>
+  </button>
+  <button class="nav-btn" id="nav-library" onclick="switchTab('library')">
+    <span class="icon">📚</span>
+    <span>Library</span>
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="switchTab('history')">
+    <span class="icon">🕐</span>
+    <span>History</span>
+  </button>
+</nav>
+
+<div id="toast-container"></div>
 
 <script>
-/* ===================================================
-   KARAOKE NIGHT — YouTube Data API v3 Edition
-   =================================================== */
+  const API_KEY = 'AIzaSyCWzhn3IAmlb97C0MEQmxcbd6ctY2je_ec';
+  let currentTab = 'search';
+  let currentSong = null;
 
-// ---- CONFIG ----
-const YT_API_KEY  = 'AIzaSyCWzhn3IAmlb97C0MEQmxcbd6ctY2je_ec';
-const YT_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
-const INTRO_VIDEO_ID = '8ZP5eqm4JqM';
+  // ---- LocalStorage Helpers ----
+  function getLibrary() {
+    try { return JSON.parse(localStorage.getItem('karaokeLibrary')) || []; } catch(e) { return []; }
+  }
+  function saveLibrary(arr) {
+    localStorage.setItem('karaokeLibrary', JSON.stringify(arr));
+  }
+  function getQueue() {
+    try { return JSON.parse(localStorage.getItem('karaokeQueue')) || []; } catch(e) { return []; }
+  }
+  function saveQueue(arr) {
+    localStorage.setItem('karaokeQueue', JSON.stringify(arr));
+  }
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem('karaokeHistory')) || []; } catch(e) { return []; }
+  }
+  function saveHistory(arr) {
+    localStorage.setItem('karaokeHistory', JSON.stringify(arr));
+  }
 
-// ---- STATE ----
-let player        = null;
-let playerReady   = false;
-let currentSong   = null;
-let isIntro       = false;
-let queue         = [];
-let library       = [];
-let history       = [];
-let nextPosition  = 1;
+  // ---- Tab Switching ----
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('nav-' + tab).classList.add('active');
+    currentTab = tab;
+    if (tab === 'queue') renderQueue();
+    if (tab === 'library') renderLibrary();
+    if (tab === 'history') renderHistory();
+  }
 
-// ---- INIT ----
-function init() {
-  loadData();
-  renderQueue();
-  renderLibrary();
-  renderHistory();
-  updateNowPlayingBar(null, 'idle');
-}
+  // ---- Toast ----
+  function showToast(msg, type='') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
 
-// ---- PERSISTENCE ----
-function saveData() {
-  try {
-    localStorage.setItem('kn_queue',   JSON.stringify(queue));
-    localStorage.setItem('kn_library', JSON.stringify(library));
-    localStorage.setItem('kn_history', JSON.stringify(history));
-    localStorage.setItem('kn_nextPos', String(nextPosition));
-  } catch(e) { console.warn('Save failed', e); }
-}
-
-function loadData() {
-  try {
-    queue       = JSON.parse(localStorage.getItem('kn_queue')   || '[]');
-    library     = JSON.parse(localStorage.getItem('kn_library') || '[]');
-    history     = JSON.parse(localStorage.getItem('kn_history') || '[]');
-    nextPosition = parseInt(localStorage.getItem('kn_nextPos')  || '1', 10);
-  } catch(e) { queue=[]; library=[]; history=[]; nextPosition=1; }
-}
-
-// ---- YOUTUBE IFRAME API ----
-window.onYouTubeIframeAPIReady = function() {
-  player = new YT.Player('yt-player', {
-    height: '100%', width: '100%',
-    playerVars: {
-      autoplay: 1, controls: 1, rel: 0,
-      modestbranding: 1, playsinline: 1
-    },
-    events: {
-      onReady: onPlayerReady,
-      onStateChange: onPlayerStateChange
-    }
-  });
-};
-
-function onPlayerReady(e) {
-  playerReady = true;
-  // Play intro video
-  isIntro = true;
-  e.target.loadVideoById(INTRO_VIDEO_ID);
-  updateNowPlayingBar({ title: 'Intro', channel_title: 'Karaoke Night', thumbnail_url: '' }, 'intro');
-  hideOverlay();
-}
-
-function onPlayerStateChange(e) {
-  if (e.data === YT.PlayerState.ENDED) {
-    if (isIntro) {
-      isIntro = false;
-      playNext();
-    } else {
-      // move current to history
-      if (currentSong) {
-        history.unshift({ ...currentSong, played_at: new Date().toLocaleString() });
-        if (history.length > 100) history.pop();
-        saveData();
-        renderHistory();
+  // ---- Search ----
+  async function doSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) { showToast('Enter a song to search!', 'error'); return; }
+    const status = document.getElementById('search-status');
+    const grid = document.getElementById('results-grid');
+    status.innerHTML = '<div class="spinner"></div>';
+    grid.innerHTML = '';
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(q)}+karaoke&maxResults=10&key=${API_KEY}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const data = await res.json();
+      status.innerHTML = '';
+      if (!data.items || data.items.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎤</div><p>No results found. Try a different search!</p></div>';
+        return;
       }
-      currentSong = null;
-      playNext();
+      grid.innerHTML = '';
+      data.items.forEach(item => {
+        const vid = item.id.videoId;
+        const title = item.snippet.title;
+        const channel = item.snippet.channelTitle;
+        const thumb = item.snippet.thumbnails.medium.url;
+        const card = document.createElement('div');
+        card.className = 'card result-card';
+        card.innerHTML = `
+          <div class="card-media">
+            <img src="${esc(thumb)}" alt="${esc(title)}" loading="lazy">
+            <div class="play-overlay" onclick="playSong({videoId:'${esc(vid)}',title:${JSON.stringify(title)},channelTitle:${JSON.stringify(channel)},thumbnailUrl:${JSON.stringify(thumb)},addedAt:new Date().toISOString()})">▶️</div>
+          </div>
+          <div class="card-info">
+            <div class="card-title">${esc(title)}</div>
+            <div class="card-channel">${esc(channel)}</div>
+            <div class="card-actions">
+              <button class="btn btn-sm btn-primary" onclick='addToQueue({videoId:${JSON.stringify(vid)},title:${JSON.stringify(title)},channelTitle:${JSON.stringify(channel)},thumbnailUrl:${JSON.stringify(thumb)},addedAt:new Date().toISOString()})'>+ Queue</button>
+              <button class="btn btn-sm btn-cyan" onclick='saveToLibrary({videoId:${JSON.stringify(vid)},title:${JSON.stringify(title)},channelTitle:${JSON.stringify(channel)},thumbnailUrl:${JSON.stringify(thumb)},addedAt:new Date().toISOString()})'>💾 Save</button>
+              <button class="btn btn-sm btn-secondary" onclick='playSong({videoId:${JSON.stringify(vid)},title:${JSON.stringify(title)},channelTitle:${JSON.stringify(channel)},thumbnailUrl:${JSON.stringify(thumb)},addedAt:new Date().toISOString()})'>▶ Play</button>
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    } catch(e) {
+      status.innerHTML = '';
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p><strong>Search failed.</strong><br>Check your connection or API quota.</p></div>`;
+      console.error(e);
     }
   }
-  if (e.data === YT.PlayerState.PLAYING && !isIntro) {
-    updateNowPlayingBar(currentSong, 'playing');
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
-  if (e.data === YT.PlayerState.PAUSED && !isIntro) {
-    updateNowPlayingBar(currentSong, 'paused');
+
+  // ---- Queue ----
+  function addToQueue(song) {
+    const q = getQueue();
+    if (q.find(s => s.videoId === song.videoId)) { showToast('Already in queue!', 'error'); return; }
+    song.position = q.length + 1;
+    song.played = false;
+    q.push(song);
+    saveQueue(q);
+    updateQueueBadge();
+    showToast('Added to queue! 🎶', 'success');
+    if (currentTab === 'queue') renderQueue();
   }
-}
 
-function playNext() {
-  const next = queue.shift();
-  saveData();
-  renderQueue();
-  if (next) {
-    currentSong = next;
-    if (playerReady) {
-      player.loadVideoById(next.video_id);
-      hideOverlay();
-    }
-    updateNowPlayingBar(next, 'loading');
-  } else {
-    currentSong = null;
-    updateNowPlayingBar(null, 'idle');
-    showOverlay('Queue Empty', 'Add songs to keep the party going!');
-  }
-}
-
-function skipSong() {
-  if (isIntro) { isIntro = false; }
-  if (currentSong) {
-    history.unshift({ ...currentSong, played_at: new Date().toLocaleString() });
-    if (history.length > 100) history.pop();
-    currentSong = null;
-    saveData();
-    renderHistory();
-  }
-  playNext();
-  toast('Skipped ⏭');
-}
-
-// ---- SEARCH (YouTube Data API v3) ----
-async function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return;
-
-  const resultsDiv  = document.getElementById('search-results');
-  const searchBtn   = document.getElementById('search-btn');
-  const sourceBadge = document.getElementById('search-source-badge');
-
-  resultsDiv.innerHTML  = '<div class="loading-spinner"><div class="spinner"></div><span>Searching YouTube...</span></div>';
-  sourceBadge.classList.remove('show');
-  searchBtn.disabled    = true;
-
-  try {
-    const params = new URLSearchParams({
-      part: 'snippet',
-      type: 'video',
-      q: q + ' karaoke',
-      maxResults: '10',
-      key: YT_API_KEY
-    });
-
-    const res  = await fetch(`${YT_SEARCH_URL}?${params}`);
-    const data = await res.json();
-
-    if (!res.ok) {
-      const msg = data?.error?.message || `HTTP ${res.status}`;
-      resultsDiv.innerHTML = `<div class="error-badge">⚠️ YouTube API error: ${msg}</div>`;
-      return;
-    }
-
-    const items = data.items || [];
-    if (!items.length) {
-      resultsDiv.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>No results found. Try a different search.</p></div>';
-      return;
-    }
-
-    // Show source badge
-    sourceBadge.classList.add('show');
-
-    const songs = items.map(item => ({
-      video_id:      item.id.videoId,
-      title:         item.snippet.title,
-      channel_title: item.snippet.channelTitle,
-      thumbnail_url: item.snippet.thumbnails?.medium?.url
-                     || item.snippet.thumbnails?.default?.url
-                     || `https://i.ytimg.com/vi/${item.id.videoId}/mqdefault.jpg`
-    }));
-
-    resultsDiv.innerHTML = songs.map(s => songCardHTML(s, 'search')).join('');
-
-  } catch (err) {
-    resultsDiv.innerHTML = `<div class="error-badge">⚠️ Network error: ${err.message}</div>`;
-  } finally {
-    searchBtn.disabled = false;
-  }
-}
-
-// ---- ADD BY URL ----
-async function addByUrl() {
-  const url = document.getElementById('url-input').value.trim();
-  if (!url) return;
-  const id = extractVideoId(url);
-  if (!id) { toast('⚠️ Could not parse YouTube URL'); return; }
-
-  try {
-    const res  = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
-    const data = await res.json();
-    const song = {
-      video_id:      id,
-      title:         data.title || 'Unknown Title',
-      channel_title: data.author_name || '',
-      thumbnail_url: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
-    };
-    addToQueue(song);
-    document.getElementById('url-input').value = '';
-    toast('Added to queue ✅');
-  } catch(e) {
-    // Fallback — add with minimal metadata
-    addToQueue({ video_id: id, title: `Video ${id}`, channel_title: '', thumbnail_url: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` });
-    document.getElementById('url-input').value = '';
-    toast('Added to queue ✅');
-  }
-}
-
-function extractVideoId(url) {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
-  ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
-  }
-  return null;
-}
-
-// ---- QUEUE ----
-function addToQueue(song) {
-  queue.push({ ...song, pos: nextPosition++ });
-  saveData();
-  renderQueue();
-  updateQueueBadge();
-  // If nothing is playing, start immediately
-  if (!currentSong && !isIntro && playerReady) {
-    currentSong = queue.shift();
-    saveData();
+  function removeFromQueue(videoId) {
+    let q = getQueue().filter(s => s.videoId !== videoId);
+    q.forEach((s,i) => s.position = i+1);
+    saveQueue(q);
+    updateQueueBadge();
     renderQueue();
-    player.loadVideoById(currentSong.video_id);
-    hideOverlay();
-    updateNowPlayingBar(currentSong, 'loading');
+    showToast('Removed from queue.');
   }
-  toast(`Added: ${song.title.slice(0, 40)}`);
-}
 
-function removeFromQueue(index) {
-  queue.splice(index, 1);
-  saveData();
-  renderQueue();
-}
+  function playNext() {
+    const q = getQueue();
+    if (q.length === 0) { showToast('Queue is empty!', 'error'); return; }
+    playSong(q[0]);
+  }
 
-function clearQueue() {
-  if (!queue.length) return;
-  queue = [];
-  saveData();
-  renderQueue();
-  toast('Queue cleared');
-}
+  function renderQueue() {
+    const q = getQueue();
+    const el = document.getElementById('queue-list');
+    const btn = document.getElementById('play-next-btn');
+    if (q.length === 0) {
+      btn.disabled = true;
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">🎶</div><p>Your queue is empty.<br><strong>Search for songs</strong> and add them to the queue!</p></div>';
+      return;
+    }
+    btn.disabled = false;
+    el.innerHTML = '';
+    q.forEach((song, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="song-card">
+          <div class="position-badge">${i+1}</div>
+          <img class="thumb" src="${esc(song.thumbnailUrl)}" alt="" loading="lazy">
+          <div class="song-info">
+            <div class="s-title">${esc(song.title)}</div>
+            <div class="s-channel">${esc(song.channelTitle)}</div>
+          </div>
+          <div class="song-actions">
+            <button class="btn btn-sm btn-primary btn-icon" onclick='playSong(${JSON.stringify(song)})' title="Play">▶</button>
+            <button class="btn btn-sm btn-danger btn-icon" onclick="removeFromQueue('${esc(song.videoId)}')" title="Remove">✕</button>
+          </div>
+        </div>`;
+      el.appendChild(card);
+    });
+  }
 
-function renderQueue() {
-  const el = document.getElementById('queue-list');
+  function updateQueueBadge() {
+    const q = getQueue();
+    const badge = document.getElementById('queue-badge');
+    if (q.length > 0) { badge.style.display='flex'; badge.textContent=q.length; }
+    else { badge.style.display='none'; }
+  }
+
+  // ---- Library ----
+  function saveToLibrary(song) {
+    const lib = getLibrary();
+    if (lib.find(s => s.videoId === song.videoId)) { showToast('Already in library!', 'error'); return; }
+    lib.unshift(song);
+    saveLibrary(lib);
+    showToast('Saved to library! 📚', 'success');
+    if (currentTab === 'library') renderLibrary();
+  }
+
+  function removeFromLibrary(videoId) {
+    saveLibrary(getLibrary().filter(s => s.videoId !== videoId));
+    renderLibrary();
+    showToast('Removed from library.');
+  }
+
+  function clearLibrary() {
+    if (!confirm('Clear entire library?')) return;
+    saveLibrary([]);
+    renderLibrary();
+    showToast('Library cleared.');
+  }
+
+  function renderLibrary() {
+    const lib = getLibrary();
+    const el = document.getElementById('library-list');
+    if (lib.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div><p>Your library is empty.<br><strong>Save songs</strong> from search results to build your collection!</p></div>';
+      return;
+    }
+    el.innerHTML = '';
+    lib.forEach(song => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const d = new Date(song.addedAt);
+      const dateStr = d.toLocaleDateString();
+      card.innerHTML = `
+        <div class="song-card">
+          <img class="thumb" src="${esc(song.thumbnailUrl)}" alt="" loading="lazy">
+          <div class="song-info">
+            <div class="s-title">${esc(song.title)}</div>
+            <div class="s-channel">${esc(song.channelTitle)}</div>
+            <div class="s-meta">Saved ${dateStr}</div>
+          </div>
+          <div class="song-actions">
+            <button class="btn btn-sm btn-primary btn-icon" onclick='addToQueue(${JSON.stringify(song)})' title="Add to Queue">+🎶</button>
+            <button class="btn btn-sm btn-secondary btn-icon" onclick='playSong(${JSON.stringify(song)})' title="Play">▶</button>
+            <button class="btn btn-sm btn-danger btn-icon" onclick="removeFromLibrary('${esc(song.videoId)}')" title="Remove">🗑</button>
+          </div>
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+
+  // ---- History ----
+  function addToHistory(song) {
+    const h = getHistory();
+    const entry = Object.assign({}, song, { playedAt: new Date().toISOString() });
+    h.unshift(entry);
+    if (h.length > 100) h.pop();
+    saveHistory(h);
+  }
+
+  function clearHistory() {
+    if (!confirm('Clear play history?')) return;
+    saveHistory([]);
+    renderHistory();
+    showToast('History cleared.');
+  }
+
+  function renderHistory() {
+    const h = getHistory();
+    const el = document.getElementById('history-list');
+    if (h.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">🕐</div><p>No songs played yet.<br>Start singing and your history will appear here!</p></div>';
+      return;
+    }
+    el.innerHTML = '';
+    h.forEach(song => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const d = new Date(song.playedAt);
+      const dateStr = d.toLocaleString();
+      card.innerHTML = `
+        <div class="song-card">
+          <img class="thumb" src="${esc(song.thumbnailUrl)}" alt="" loading="lazy">
+          <div class="song-info">
+            <div class="s-title">${esc(song.title)}</div>
+            <div class="s-channel">${esc(song.channelTitle)}</div>
+            <div class="s-meta">🕐 ${dateStr}</div>
+          </div>
+          <div class="song-actions">
+            <button class="btn btn-sm btn-primary btn-icon" onclick='addToQueue(${JSON.stringify(song)})' title="Queue Again">+🎶</button>
+            <button class="btn btn-sm btn-secondary btn-icon" onclick='playSong(${JSON.stringify(song)})' title="Play Again">▶</button>
+          </div>
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+
+  // ---- Player ----
+  function playSong(song) {
+    currentSong = song;
+    const bar = document.getElementById('player-bar');
+    document.getElementById('player-song-name').textContent = song.title;
+    document.getElementById('yt-iframe').src = `https://www.youtube.com/embed/${song.videoId}?autoplay=1&rel=0`;
+    bar.classList.add('active');
+    adjustMainTop();
+    showToast('Now playing: ' + song.title.substring(0,30) + '...', 'success');
+  }
+
+  function closePlayer() {
+    document.getElementById('yt-iframe').src = '';
+    document.getElementById('player-bar').classList.remove('active');
+    currentSong = null;
+    adjustMainTop();
+  }
+
+  function markPlayed() {
+    if (!currentSong) return;
+    addToHistory(currentSong);
+    // Remove from queue if it's the first item
+    let q = getQueue();
+    if (q.length > 0 && q[0].videoId === currentSong.videoId) {
+      q.shift();
+      q.forEach((s,i) => s.position = i+1);
+      saveQueue(q);
+      updateQueueBadge();
+    }
+    showToast('Marked as played! 🎉', 'success');
+    closePlayer();
+    if (currentTab === 'queue') renderQueue();
+    if (currentTab === 'history') renderHistory();
+  }
+
+  function adjustMainTop() {
+    const bar = document.getElementById('player-bar');
+    const main = document.getElementById('main');
+    if (bar.classList.contains('active')) {
+      const h = bar.offsetHeight;
+      main.style.top = (60 + h) + 'px';
+    } else {
+      main.style.top = '60px';
+    }
+  }
+
+  // Recalculate on resize
+  window.addEventListener('resize', adjustMainTop);
+
+  // ---- Init ----
   updateQueueBadge();
-  if (!queue.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Queue is empty.<br>Search songs and add them!</p></div>';
-    return;
-  }
-  el.innerHTML = queue.map((s, i) => `
-    <div class="queue-item${i === 0 ? ' now' : ''}">
-      <div class="queue-num">${i === 0 ? '▶' : i + 1}</div>
-      <img src="${s.thumbnail_url}" onerror="this.style.display='none'" width="56" height="42" style="border-radius:6px;object-fit:cover;flex-shrink:0" />
-      <div style="flex:1;min-width:0">
-        <div class="song-card-title" style="font-size:12px">${escHtml(s.title)}</div>
-        <div class="song-card-channel">${escHtml(s.channel_title || '')}</div>
-      </div>
-      <button class="queue-remove" onclick="removeFromQueue(${i})" title="Remove">✕</button>
-    </div>
-  `).join('');
-}
-
-function updateQueueBadge() {
-  const badge = document.getElementById('queue-badge');
-  if (queue.length > 0) {
-    badge.textContent = queue.length;
-    badge.style.display = 'inline';
-  } else {
-    badge.style.display = 'none';
-  }
-}
-
-// ---- LIBRARY ----
-function addToLibrary(song) {
-  if (library.find(s => s.video_id === song.video_id)) {
-    toast('Already in library');
-    return;
-  }
-  library.push({ ...song, added_at: new Date().toISOString() });
-  saveData();
-  renderLibrary();
-  toast('Saved to library 🎵');
-}
-
-function removeFromLibrary(video_id) {
-  library = library.filter(s => s.video_id !== video_id);
-  saveData();
-  renderLibrary();
-  toast('Removed from library');
-}
-
-function renderLibrary() {
-  const el = document.getElementById('library-list');
-  document.getElementById('library-count').textContent = `${library.length} song${library.length !== 1 ? 's' : ''}`;
-  if (!library.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🎵</div><p>No saved songs yet.<br>Search and save your favourites!</p></div>';
-    return;
-  }
-  el.innerHTML = library.map(s => songCardHTML(s, 'library')).join('');
-}
-
-// ---- HISTORY ----
-function clearHistory() {
-  history = [];
-  saveData();
-  renderHistory();
-  toast('History cleared');
-}
-
-function renderHistory() {
-  const el = document.getElementById('history-list');
-  if (!history.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🕐</div><p>No songs played yet.</p></div>';
-    return;
-  }
-  el.innerHTML = history.map(s => `
-    <div class="history-item">
-      <img src="${s.thumbnail_url}" onerror="this.style.display='none'" />
-      <div style="flex:1;min-width:0">
-        <div class="song-card-title" style="font-size:12px">${escHtml(s.title)}</div>
-        <div class="history-time">${escHtml(s.played_at || '')}</div>
-      </div>
-      <button class="btn-sm" onclick="addToQueue(${escAttr(JSON.stringify(s))})">▶ Queue</button>
-    </div>
-  `).join('');
-}
-
-// ---- UI HELPERS ----
-function songCardHTML(song, context) {
-  const inLibrary = library.find(s => s.video_id === song.video_id);
-  const libBtn = context === 'library'
-    ? `<button class="btn-sm danger" onclick="removeFromLibrary('${song.video_id}')">🗑 Remove</button>`
-    : inLibrary
-      ? `<button class="btn-sm" disabled>✓ Saved</button>`
-      : `<button class="btn-sm" onclick="addToLibrary(${escAttr(JSON.stringify(song))})">💾 Save</button>`;
-
-  return `
-    <div class="song-card">
-      <img src="${song.thumbnail_url}" onerror="this.style.display='none'" loading="lazy" />
-      <div class="song-card-info">
-        <div class="song-card-title">${escHtml(song.title)}</div>
-        <div class="song-card-channel">${escHtml(song.channel_title || '')}</div>
-        <div class="song-card-actions">
-          <button class="btn-sm accent" onclick="addToQueue(${escAttr(JSON.stringify(song))})">▶ Queue</button>
-          ${libBtn}
-        </div>
-      </div>
-    </div>`;
-}
-
-function showTab(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'library') renderLibrary();
-  if (name === 'queue')   renderQueue();
-  if (name === 'history') renderHistory();
-}
-
-function hideOverlay() {
-  document.getElementById('player-overlay').classList.add('hidden');
-}
-function showOverlay(title, sub) {
-  const overlay = document.getElementById('player-overlay');
-  overlay.classList.remove('hidden');
-  document.getElementById('overlay-title').textContent = title;
-  document.getElementById('overlay-sub').textContent   = sub;
-}
-
-function updateNowPlayingBar(song, status) {
-  const thumb   = document.getElementById('np-thumb');
-  const title   = document.getElementById('np-title');
-  const channel = document.getElementById('np-channel');
-  const statusEl = document.getElementById('np-status');
-  const statusMap = { idle: 'Idle', loading: 'Loading…', playing: '▶ Playing', paused: '⏸ Paused', intro: '🎬 Intro' };
-
-  if (song) {
-    thumb.src = song.thumbnail_url || '';
-    thumb.style.display = song.thumbnail_url ? 'block' : 'none';
-    title.textContent   = song.title || 'Unknown';
-    channel.textContent = song.channel_title || '';
-  } else {
-    thumb.style.display = 'none';
-    title.textContent   = 'Nothing playing';
-    channel.textContent = '';
-  }
-  statusEl.textContent = statusMap[status] || status;
-  statusEl.style.background = status === 'playing' ? 'var(--success)'
-    : status === 'paused'  ? 'var(--warning)'
-    : status === 'intro'   ? 'var(--accent3)'
-    : 'var(--accent)';
-}
-
-let toastTimer;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escAttr(str) {
-  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-// ---- BOOT ----
-init();
 </script>
-
-<!-- YouTube IFrame API -->
-<script src="https://www.youtube.com/iframe_api" async></script>
 </body>
 </html>
